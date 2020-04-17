@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>文章列表</title>
+    <link rel="stylesheet" href="./libs/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/iconfont.css">
+    <link rel="stylesheet" href="./css/main.css">
+    <script src="./libs/jquery-1.12.4.min.js"></script>
+    <script src="./libs/bootstrap/js/bootstrap.min.js"></script>
+    <!-- <script src="./libs/jquery.twbsPagination.min.js"></script> -->
+    <script src="./libs/jquery.twbsPagination.js"></script>
+    <!-- 引入模板引擎js文件 -->
+    <script src="./libs/template-web.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="common_title">
+            文章列表
+        </div>
+        <div class="container-fluid common_con">
+            <div class="row opt_btns">
+                <div class="col-xs-6">
+                    <form class="form-inline">
+                        <select id="selCategory" name="" class="form-control input-sm">
+                            <option value="">所有分类</option>
+                            <option>未分类</option>
+                            <option>奇趣事</option>
+                            <option>会生活</option>
+                            <option>爱旅行</option>
+                        </select>
+                        <select id="selStatus" name="" class="form-control input-sm">
+                            <option value="">所有状态</option>
+                            <option value="草稿">草稿</option>
+                            <option value="已发布">已发布</option>
+                        </select>
+                        <button id="btnSearch" class="btn btn-default btn-sm">筛选</button>
+                    </form>
+                </div>
+                <div class="col-xs-6">
+                    <a href="article_release.html" class="btn btn-success btn-sm pull-right" id="release_btn">发表文章</a>
+                </div>
+            </div>
+            <table class="table table-striped table-bordered table-hover mp20">
+                <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>分类</th>
+                        <th class="text-center">发表时间</th>
+                        <th class="text-center">状态</th>
+                        <th class="text-center" width="100">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>王积千造统最头</td>
+                        <td>杰克</td>
+                        <td>奇趣事</td>
+                        <td class="text-center">2017-06-08 07:08:46</td>
+                        <td class="text-center">已发布</td>
+                        <td class="text-center">
+                            <a href="article_edit.html" class="btn btn-default btn-xs">编辑</a>
+                            <a href="javascript:void(0);" class="btn btn-danger btn-xs delete">删除</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="row text-center">
+                <ul class="pagination" id="pagination"></ul>
+                <p>没有数据</p>
+            </div>
+        </div>
+    </div>
+    <script id="sb" type="text/html">
+        <option value="">所有分类</option>
+        {{each data}}
+        <option value="{{$value.id}}">{{$value.name}}</option>
+        {{/each}}
+    </script>
+
+    <script id="sb1" type="text/html">
+        {{each data.data v}}
+        <tr>
+            <td>{{v.title}}</td>
+            <td>{{v.author}}</td>
+            <td>{{v.category}}</td>
+            <td class="text-center">{{v.date}}</td>
+            <td class="text-center">{{v.state}}</td>
+            <td class="text-center">
+                <a href="article_edit.html?id={{v.id}}" class="btn btn-default btn-xs">编辑</a>
+                <a href="javascript:void(0);" data-id="{{v.id}}" class="btn btn-danger btn-xs delete">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+    <script src="./libs/http.js"></script>
+    <!-- <script>
+        //入口函数
+        $(function () {
+            //显示下拉菜单数据
+            $.ajax({
+                url: BigNew.category_list,
+                success: function (back) {
+                    // console.log(back);
+                    if (back.code == 200) {
+                        var res = template('sb', back)
+                        $('#selCategory').html(res)
+                        // console.log(res);
+                    }
+                }
+            })
+
+
+            //显示文章数据
+            $.ajax({
+                url: BigNew.article_query,
+                data: {
+                    type: $('#selCategory').val(),
+                    state: $('#selStatus').val(),
+                    page: 1,
+                    perpage: 6
+                },
+                success: function (back) {
+                    // console.log(back);
+                    if (back.code == 200) {
+                        $('tbody').html(template('sb1', back))
+
+                        //分页
+                        $('#pagination').twbsPagination({
+                            totalPages: back.data.totalPage,
+                            visiblePages: 6,
+                            first: '首页',
+                            prev: '上一页',
+                            next: '下一页',
+                            last: '尾页',
+                            onPageClick: function (event, page) {
+                                // $('#page-content').text('Page ' + page);
+                                //调用ajax 获取当前页码
+                                $.ajax({
+                                    url: BigNew.article_query,
+                                    data: {
+                                        type: $('#selCategory').val(),
+                                        state: $('#selStatus').val(),
+                                        page: page,
+                                        perpage: 6
+                                    },
+                                    success: function (back) {
+                                        console.log(back);
+                                        if (back.code == 200) {
+                                            $('tbody').html(template('sb1', back))
+                                        }
+                                    }
+                                })
+                            }
+                        });
+                    }
+                }
+            })
+
+            //筛选文章
+            $("#btnSearch").on('click', function (e) {
+                //阻止默认跳转
+                e.preventDefault()
+                //显示文章数据
+                $.ajax({
+                    url: BigNew.article_query,
+                    data: {
+                        type: $('#selCategory').val(),
+                        state: $('#selStatus').val(),
+                        page: 1,
+                        perpage: 6
+                    },
+                    success: function (back) {
+                        console.log(back);
+                        if (back.code == 200) {
+                            $('tbody').html(template('sb1', back))
+                            $('#pagination').twbsPagination('changeTotalPages', back.data.totalPage, 1)
+                        }
+                    }
+                })
+            })
+        })
+
+    </script> -->
+
+
+
+    <!-- 封装函数写法 -->
+    <script>
+        //入口函数
+        $(function () {
+            //显示下拉菜单数据
+            $.ajax({
+                url: BigNew.category_list,
+                success: function (back) {
+                    // console.log(back);
+                    if (back.code == 200) {
+                        var res = template('sb', back)
+                        $('#selCategory').html(res)
+                        // console.log(res);
+                    }
+                }
+            })
+
+
+            //显示文章数据  函数 
+            var myPage = 1;
+            function getData(myPage, callback) {
+                $.ajax({
+                    url: BigNew.article_query,
+                    data: {
+                        type: $('#selCategory').val(),
+                        state: $('#selStatus').val(),
+                        page: myPage,
+                        perpage: 3
+                    },
+                    success: function (back) {
+                        // console.log(back);
+                        if (back.code == 200) {
+                            $('tbody').html(template('sb1', back))
+
+                            if (callback != null && back.data.data.length != 0) {
+                                $("#pagination").show().next('p').hide()
+                                callback(back)
+                            } else if (back.data.data.length == 0 && myPage == 1) {
+                                $("#pagination").hide().next('p').show()
+                            } else if (back.data.totalPage == myPage - 1 && back.data.data.length == 0) {
+                                myPage -= 1
+                                $('#pagination').twbsPagination('changeTotalPages', back.data.totalPage, myPage)
+                            }
+                        }
+                    }
+                })
+            }
+            getData(1, function (back) {
+                //分页
+                $('#pagination').twbsPagination({
+                    totalPages: back.data.totalPage,
+                    visiblePages: 6,
+                    first: '首页',
+                    prev: '上一页',
+                    next: '下一页',
+                    last: '尾页',
+                    onPageClick: function (event, page) {
+                        myPage = page
+                        // $('#page-content').text('Page ' + page);
+                        //调用ajax 获取当前页码
+                        getData(page, null)
+                    }
+                });
+            })
+
+            //筛选文章
+            $("#btnSearch").on('click', function (e) {
+                //阻止默认跳转
+                e.preventDefault()
+                //显示文章数据
+                getData(1, function (back) {
+                    $('#pagination').twbsPagination('changeTotalPages', back.data.totalPage, 1)
+                })
+            })
+
+
+            //删除
+            $('tbody').on('click', '.delete', function () {
+                if (confirm('确定要删除吗?')) {
+                    //请求ajax删除
+                    // console.log($(this).attr('data-id'));
+                    var num = parseInt($(this).attr('data-id'))
+                    console.log(num);
+
+                    $.ajax({
+                        type: 'post',
+                        url: BigNew.article_delete,
+                        data: {
+                            id: num
+                        },
+                        success: function (back) {
+                            // console.log(back);
+                            if (back.code == 204) {
+                                alert('删除成功');
+                                getData(myPage, function (back) {
+                                    $('#pagination').twbsPagination('changeTotalPages', back.data.totalPage, myPage)
+                                })
+                            }
+                        }
+                    })
+                }
+            })
+
+            //发表文章点击事件触发
+            $("#release_btn").on('click', function () {
+                parent.$('.level02>li:eq(1)').click()
+            })
+        })
+
+    </script>
+</body>
+
+</html>
